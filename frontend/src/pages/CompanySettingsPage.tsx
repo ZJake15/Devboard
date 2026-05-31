@@ -1,13 +1,67 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import { fetchMyCompany, updateMyCompany } from '../lib/api'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
+import { fetchMyCompany, updateMyCompany, uploadCompanyLogo, removeCompanyLogo, deleteAccount } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { ImageUploader } from '../components/ImageUploader'
+
+function DeleteCompanyModal({ companyName, onConfirm, onCancel, loading }: {
+  companyName: string
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  const [typed, setTyped] = useState('')
+  const confirmed = typed.trim() === companyName.trim()
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
+      <motion.div
+        initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
+        className="relative w-full max-w-md glass rounded-2xl p-6 border border-red-500/30"
+      >
+        <div className="text-red-400 text-3xl mb-3">⚠</div>
+        <h2 className="text-lg font-bold text-white mb-2">Delete company account?</h2>
+        <p className="text-white/60 text-sm mb-4">
+          This permanently deletes your company, <strong className="text-white">all its job listings</strong>,
+          and every application & rating tied to them. <strong className="text-white">This cannot be undone.</strong>
+        </p>
+        <div className="mb-4">
+          <label className="block text-xs text-white/50 uppercase tracking-wider mb-1.5">
+            Type <span className="text-white font-mono">{companyName}</span> to confirm
+          </label>
+          <input
+            autoFocus
+            value={typed}
+            onChange={e => setTyped(e.target.value)}
+            placeholder={companyName}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-red-500 transition-colors"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white hover:border-white/30 text-sm transition-colors">
+            Cancel
+          </button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onConfirm} disabled={!confirmed || loading}
+            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 disabled:bg-red-900 disabled:opacity-50 text-white text-sm font-medium transition-colors">
+            {loading ? 'Deleting…' : 'Delete company'}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
 
 export function CompanySettingsPage() {
-  const { isCompany } = useAuth()
+  const { isCompany, logout } = useAuth()
+  const qc = useQueryClient()
+  const navigate = useNavigate()
   const [saved, setSaved] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [form, setForm] = useState({
     name: '', website: '', description: '',
   })
@@ -36,6 +90,14 @@ export function CompanySettingsPage() {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      logout()
+      navigate('/')
+    },
+  })
+
   if (!isCompany) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
@@ -60,6 +122,25 @@ export function CompanySettingsPage() {
             </div>
           ) : (
             <>
+              <div>
+                <label className="block text-xs text-white/50 uppercase tracking-wider mb-3">Company Logo</label>
+                <ImageUploader
+                  currentUrl={company?.logo ?? company?.logo_url ?? null}
+                  shape="square"
+                  fallback={
+                    <span className="text-3xl font-bold text-violet-300">
+                      {company?.name?.[0]?.toUpperCase()}
+                    </span>
+                  }
+                  onUpload={async (file) => {
+                    const res = await uploadCompanyLogo(file)
+                    return { url: res.logo }
+                  }}
+                  onRemove={async () => { await removeCompanyLogo() }}
+                  onChanged={() => qc.invalidateQueries({ queryKey: ['my-company'] })}
+                />
+              </div>
+
               <div>
                 <label className="block text-xs text-white/50 uppercase tracking-wider mb-1.5">Company Name</label>
                 <input
@@ -102,7 +183,33 @@ export function CompanySettingsPage() {
             </>
           )}
         </div>
+
+        {/* Danger zone */}
+        <div className="glass rounded-2xl p-6 border border-red-500/20 mt-6">
+          <h2 className="text-sm font-semibold text-red-400 mb-1">Danger Zone</h2>
+          <p className="text-xs text-white/40 mb-4">
+            Permanently delete this company account along with all its job listings and applications.
+            This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/70 text-sm transition-colors"
+          >
+            Delete company account
+          </button>
+        </div>
       </motion.div>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <DeleteCompanyModal
+            companyName={company?.name ?? ''}
+            onConfirm={() => deleteMutation.mutate()}
+            onCancel={() => setShowDeleteModal(false)}
+            loading={deleteMutation.isPending}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

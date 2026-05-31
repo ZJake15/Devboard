@@ -257,8 +257,12 @@ export function ApplicantProfilePage() {
           {/* Header */}
           <div className="glass rounded-2xl p-6 flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center text-2xl font-bold text-violet-300">
-                {profile.username[0].toUpperCase()}
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-violet-600/30 border border-violet-500/30 flex items-center justify-center text-2xl font-bold text-violet-300">
+                {profile.profile?.avatar ? (
+                  <img src={profile.profile.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  profile.username[0].toUpperCase()
+                )}
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">
@@ -411,8 +415,16 @@ export function ApplicantProfilePage() {
               </motion.button>
             </div>
           ) : currentStatus === 'offer' ? (
-            <div className="rounded-2xl p-5 text-center bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-sm font-medium text-emerald-400">🎉 You hired this applicant — offer sent!</p>
+            <div className={`rounded-2xl p-5 text-center border ${
+              application?.offer_response === 'accepted'
+                ? 'bg-emerald-500/15 border-emerald-500/30'
+                : 'bg-emerald-500/10 border-emerald-500/20'
+            }`}>
+              {application?.offer_response === 'accepted' ? (
+                <p className="text-sm font-medium text-emerald-400">✅ Offer accepted — {profile.username} is joining your team!</p>
+              ) : (
+                <p className="text-sm font-medium text-emerald-400">🎉 Offer sent — waiting for {profile.username} to respond.</p>
+              )}
             </div>
           ) : null}
 

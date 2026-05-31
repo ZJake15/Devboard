@@ -37,7 +37,7 @@ api.interceptors.response.use(
 
 // Types
 export interface Skill { id: number; name: string; slug: string }
-export interface Company { id: number; name: string; slug: string; logo_url: string; website: string; description: string; avg_response_days: number | null; response_rate: number | null }
+export interface Company { id: number; name: string; slug: string; logo: string | null; logo_url: string; website: string; description: string; avg_response_days: number | null; response_rate: number | null }
 export type SalaryRange =
   | { masked: false; min: number; max: number; currency: string }
   | { masked: true; hint: string; message: string }
@@ -68,9 +68,9 @@ export interface Job {
 }
 export interface PaginatedResponse<T> { count: number; next: string | null; previous: string | null; results: T[] }
 export interface RankInfo { score: number; tier: string; tier_icon: string; projects_score: number; ratings_score: number; ratings_received: number; average_rating: number | null }
-export interface Profile { tier: string; headline: string; years_experience: number; skills: Skill[]; remote_preference: string; rank?: RankInfo }
+export interface Profile { tier: string; avatar: string | null; headline: string; years_experience: number; skills: Skill[]; remote_preference: string; rank?: RankInfo }
 export interface User { id: number; username: string; email: string; first_name: string; last_name: string; is_staff: boolean; profile: Profile }
-export interface Application { id: number; job: Job; status: string; notes: string; order: number; created_at: string; interview_scheduled_at?: string | null; interview_notes?: string; applicant_username?: string }
+export interface Application { id: number; job: Job; status: string; notes: string; order: number; created_at: string; interview_scheduled_at?: string | null; interview_notes?: string; offer_response?: string; applicant_username?: string }
 export interface SavedSearch { id: number; name: string; query_params: Record<string, string>; notify: boolean }
 export interface SalaryBenchmark { role: string; location: string; seniority: string; count: number; min_salary: number; max_salary: number; avg_salary: number; p25: number; p50: number; p75: number }
 
@@ -157,6 +157,7 @@ export interface PublicProfile {
   first_name: string
   last_name: string
   profile: {
+    avatar: string | null
     headline: string
     years_experience: number
     skills: Skill[]
@@ -165,6 +166,25 @@ export interface PublicProfile {
     rank: RankInfo
   }
 }
+
+// ── Image uploads ──────────────────────────────────────────────────────────
+export const uploadAvatar = (file: File) => {
+  const form = new FormData()
+  form.append('avatar', file)
+  return api.post<{ avatar: string }>('/auth/me/avatar/', form).then(r => r.data)
+}
+
+export const removeAvatar = () =>
+  api.delete<{ avatar: null }>('/auth/me/avatar/').then(r => r.data)
+
+export const uploadCompanyLogo = (file: File) => {
+  const form = new FormData()
+  form.append('logo', file)
+  return api.post<{ logo: string }>('/companies/me/logo/', form).then(r => r.data)
+}
+
+export const removeCompanyLogo = () =>
+  api.delete<{ logo: null }>('/companies/me/logo/').then(r => r.data)
 
 export const fetchPublicProfile = (username: string) =>
   api.get<PublicProfile>(`/auth/users/${username}/`).then(r => r.data)
@@ -201,6 +221,9 @@ export const updateApplication = (id: number, data: Partial<Application>) =>
 
 export const deleteApplication = (id: number) =>
   api.delete(`/jobs/applications/${id}/`)
+
+export const respondToOffer = (id: number, response: 'accepted' | 'declined') =>
+  api.post<Application>(`/jobs/applications/${id}/respond/`, { response }).then((r) => r.data)
 
 export const fetchSavedSearches = () =>
   api.get<SavedSearch[]>('/jobs/saved-searches/').then((r) => r.data)

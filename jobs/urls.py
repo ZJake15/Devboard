@@ -9,6 +9,7 @@ from .views import (
     JobListView,
     OfferJobView,
     RateApplicantView,
+    RespondToOfferView,
     ReceivedApplicationsView,
     ReviewApplicationView,
     SalaryBenchmarkView,
@@ -33,4 +34,5 @@ urlpatterns = [
     path('saved-searches/<int:pk>/', SavedSearchDetailView.as_view(), name='saved-search-detail'),
     path('applications/', ApplicationListCreateView.as_view(), name='application-list'),
     path('applications/<int:pk>/', ApplicationDetailView.as_view(), name='application-detail'),
+    path('applications/<int:pk>/respond/', RespondToOfferView.as_view(), name='application-respond'),
 ]

@@ -61,7 +61,7 @@ export function PricingPage() {
           className="glass rounded-2xl p-8"
         >
           <div className="text-sm text-white/50 mb-2">Free forever</div>
-          <div className="text-3xl font-bold text-white mb-1">$0</div>
+          <div className="text-3xl font-bold text-white mb-1">₱0</div>
           <div className="text-white/40 text-sm mb-6">No credit card required</div>
           <ul className="space-y-3 mb-8">
             {FREE_FEATURES.map((f) => (
@@ -89,7 +89,7 @@ export function PricingPage() {
             Most popular
           </div>
           <div className="text-sm text-violet-300 mb-2">Premium</div>
-          <div className="text-3xl font-bold text-white mb-1">$9<span className="text-lg text-white/50">/mo</span></div>
+          <div className="text-3xl font-bold text-white mb-1">₱499<span className="text-lg text-white/50">/mo</span></div>
           <div className="text-white/40 text-sm mb-6">Cancel anytime</div>
           <ul className="space-y-3 mb-8">
             {PREMIUM_FEATURES.map((f) => (

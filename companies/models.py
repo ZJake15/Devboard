@@ -7,6 +7,7 @@ DEMO_OTP = '123456'
 class Company(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True)
     logo_url = models.URLField(blank=True)
     website = models.URLField(blank=True)
     description = models.TextField(blank=True)

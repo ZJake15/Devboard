@@ -1,31 +1,73 @@
 @import "tailwindcss";
 
+/* ─── Theme tokens ──────────────────────────────────────────────────────────
+   Dark is the default. Light mode flips Tailwind's --color-white so every
+   text-white / bg-white/x / border-white/x utility re-tints automatically. */
+:root {
+  color-scheme: dark;
+  --app-bg: #0f0f14;
+  --surface-solid: #15151c;
+  --body-text: #e2e2eb;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(139, 92, 246, 0.4);
+}
+
+html.light {
+  color-scheme: light;
+  --color-white: #1f2030;          /* flips white-based ink + surfaces to dark */
+  --app-bg: #f3f4fa;
+  --surface-solid: #ffffff;
+  --body-text: #1f2030;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(31, 32, 48, 0.1);
+  --glass-border-hover: rgba(139, 92, 246, 0.45);
+}
+
+/* Keep real white text on solid colored buttons in light mode by re-scoping
+   the custom property for those elements (cascades to their text). */
+html.light :is(
+  .bg-violet-600, .bg-violet-500,
+  .bg-emerald-600, .bg-emerald-500,
+  .bg-red-600, .bg-red-500,
+  .bg-amber-600, .bg-amber-500,
+  .bg-blue-600, .bg-blue-500,
+  .bg-indigo-600, .bg-indigo-500,
+  .bg-green-600, .bg-green-500
+) {
+  --color-white: #ffffff;
+}
+
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
   * {
     box-sizing: border-box;
+  }
+  html {
+    transition: background-color 0.3s ease;
   }
   body {
     margin: 0;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    background: #0f0f14;
-    color: #e2e2eb;
+    background: var(--app-bg);
+    color: var(--body-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
+    transition: background-color 0.3s ease, border-color 0.2s ease;
   }
   .glass-hover:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(139, 92, 246, 0.4);
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
   }
   .text-gradient {
     background: linear-gradient(135deg, #a855f7, #6366f1);
@@ -36,5 +78,11 @@
   .salary-blur {
     filter: blur(6px);
     user-select: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body, .glass {
+    transition: none !important;
   }
 }

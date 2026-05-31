@@ -1,9 +1,11 @@
 from rest_framework import generics, permissions, status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from audit.utils import log_action
+from config.image_upload import validate_image
 from .models import Company, CompanyProfile
 from .serializers import CompanyRegisterSerializer, CompanySerializer, OTPVerifySerializer
 
@@ -80,3 +82,42 @@ class MyCompanyView(generics.RetrieveUpdateAPIView):
         super().check_permissions(request)
         if not request.auth or request.auth.get('account_type') != 'company':
             self.permission_denied(request, message='Company accounts only.')
+
+
+class CompanyLogoUploadView(APIView):
+    """Upload or replace the company's logo."""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def _company(self, request):
+        if not request.auth or request.auth.get('account_type') != 'company':
+            return None
+        return request.user.company_profile.company
+
+    def post(self, request):
+        company = self._company(request)
+        if company is None:
+            return Response({'detail': 'Company accounts only.'}, status=status.HTTP_403_FORBIDDEN)
+
+        uploaded = request.FILES.get('logo')
+        error = validate_image(uploaded)
+        if error:
+            return error
+
+        if company.logo:
+            company.logo.delete(save=False)
+
+        company.logo = uploaded
+        company.save()
+        log_action(request, 'user.profile_update', 'Company', company.pk, {'field': 'logo'})
+
+        return Response({'logo': request.build_absolute_uri(company.logo.url)},
+                        status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        company = self._company(request)
+        if company is None:
+            return Response({'detail': 'Company accounts only.'}, status=status.HTTP_403_FORBIDDEN)
+        if company.logo:
+            company.logo.delete(save=True)
+        return Response({'logo': None}, status=status.HTTP_200_OK)

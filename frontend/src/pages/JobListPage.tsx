@@ -136,7 +136,7 @@ export function JobListPage() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25 }}
-                className="absolute bottom-0 left-0 right-0 bg-[#13131a] rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto"
+                className="absolute bottom-0 left-0 right-0 bg-[var(--surface-solid)] rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-semibold text-white">Filters</h3>

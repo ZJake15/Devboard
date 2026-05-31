@@ -59,7 +59,7 @@ export function NotificationBell() {
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[#0f0f14]"
+            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-[var(--app-bg)]"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </motion.span>
@@ -73,9 +73,9 @@ export function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.12 }}
-            className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-[#15151c] border border-white/10 rounded-xl shadow-2xl z-50"
+            className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-[var(--surface-solid)] border border-white/10 rounded-xl shadow-2xl z-50"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 sticky top-0 bg-[#15151c]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 sticky top-0 bg-[var(--surface-solid)]">
               <span className="text-sm font-semibold text-white">Notifications</span>
               {unreadCount > 0 && (
                 <button

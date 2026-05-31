@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import {
   fetchApplications, deleteApplication, fetchNotifications, markNotificationsRead,
-  type Application,
+  respondToOffer, type Application,
 } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
@@ -16,7 +16,13 @@ const COLUMNS: { key: string; label: string; color: string }[] = [
   { key: 'rejected',  label: 'Rejected',  color: 'bg-red-500/20 border-red-500/30 text-red-300' },
 ]
 
-function AppCard({ app, onDelete }: { app: Application; onDelete?: (id: number) => void }) {
+function AppCard({ app, onDelete, onRespond, responding }: {
+  app: Application
+  onDelete?: (id: number) => void
+  onRespond?: (id: number, response: 'accepted' | 'declined') => void
+  responding?: boolean
+}) {
+  const navigate = useNavigate()
   const daysSince = Math.floor((Date.now() - new Date(app.created_at).getTime()) / 86400000)
 
   return (
@@ -25,7 +31,8 @@ function AppCard({ app, onDelete }: { app: Application; onDelete?: (id: number) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="glass rounded-xl p-4"
+      onClick={() => navigate(`/jobs/${app.job.id}`)}
+      className="glass glass-hover rounded-xl p-4 cursor-pointer"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -34,22 +41,29 @@ function AppCard({ app, onDelete }: { app: Application; onDelete?: (id: number) 
           <div className="text-xs text-white/40 mt-1">📍 {app.job.location} · {daysSince}d ago</div>
 
           {/* Interview scheduled info */}
-          {(app as any).interview_scheduled_at && (
+          {app.interview_scheduled_at && (
             <div className="mt-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1">
-              📅 Interview: {new Date((app as any).interview_scheduled_at).toLocaleString('en-PH', {
+              📅 Interview: {new Date(app.interview_scheduled_at).toLocaleString('en-PH', {
                 month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
               })}
             </div>
           )}
-          {app.status === 'offer' && (
+
+          {/* Offer state */}
+          {app.status === 'offer' && app.offer_response !== 'accepted' && (
             <div className="mt-2 text-xs text-emerald-400">🎉 You received a job offer!</div>
+          )}
+          {app.offer_response === 'accepted' && (
+            <div className="mt-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2 py-1">
+              ✓ You accepted this offer
+            </div>
           )}
         </div>
 
         {/* Only saved jobs can be removed by the user */}
         {app.status === 'saved' && onDelete && (
           <button
-            onClick={() => onDelete(app.id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(app.id) }}
             className="flex-shrink-0 text-white/25 hover:text-red-400 transition-colors text-sm px-1"
             title="Remove saved job"
           >
@@ -57,6 +71,28 @@ function AppCard({ app, onDelete }: { app: Application; onDelete?: (id: number) 
           </button>
         )}
       </div>
+
+      {/* Accept / Decline buttons on an active, unanswered offer */}
+      {app.status === 'offer' && !app.offer_response && onRespond && (
+        <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => onRespond(app.id, 'accepted')}
+            disabled={responding}
+            className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+          >
+            {responding ? '…' : '✓ Accept offer'}
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => onRespond(app.id, 'declined')}
+            disabled={responding}
+            className="flex-1 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 disabled:opacity-50 text-xs font-medium transition-colors"
+          >
+            Decline
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -81,6 +117,12 @@ export function PipelinePage() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteApplication,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['applications'] }),
+  })
+
+  const respondMutation = useMutation({
+    mutationFn: ({ id, response }: { id: number; response: 'accepted' | 'declined' }) =>
+      respondToOffer(id, response),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['applications'] }),
   })
 
@@ -181,6 +223,8 @@ export function PipelinePage() {
                           key={app.id}
                           app={app}
                           onDelete={col.key === 'saved' ? id => deleteMutation.mutate(id) : undefined}
+                          onRespond={(id, response) => respondMutation.mutate({ id, response })}
+                          responding={respondMutation.isPending}
                         />
                       ))}
                     </AnimatePresence>

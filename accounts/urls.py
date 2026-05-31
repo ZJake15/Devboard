@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    DeleteAccountView, MeView, NotificationListView, NotificationMarkReadView,
+    AvatarUploadView, DeleteAccountView, MeView, NotificationListView, NotificationMarkReadView,
     ProjectDetailView, ProjectListCreateView, PublicProfileView,
     RegisterView, SkillListView, TierTokenObtainPairView, TierTokenRefreshView, UpgradeView,
 )
@@ -10,6 +10,7 @@ urlpatterns = [
     path('token/', TierTokenObtainPairView.as_view(), name='token_obtain'),
     path('token/refresh/', TierTokenRefreshView.as_view(), name='token_refresh'),
     path('me/', MeView.as_view(), name='me'),
+    path('me/avatar/', AvatarUploadView.as_view(), name='avatar-upload'),
     path('upgrade/', UpgradeView.as_view(), name='upgrade'),
     path('delete/', DeleteAccountView.as_view(), name='delete-account'),
     path('skills/', SkillListView.as_view(), name='skills'),

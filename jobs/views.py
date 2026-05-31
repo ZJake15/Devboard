@@ -317,6 +317,12 @@ class OfferJobView(APIView):
         except DjangoUser.DoesNotExist:
             return Response({'detail': f'Developer "{username}" not found.'},
                             status=status.HTTP_404_NOT_FOUND)
+
+        # Only developer accounts can be offered work (not company accounts)
+        if hasattr(target_user, 'company_profile'):
+            return Response({'detail': f'"{username}" is a company account, not a developer.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         try:
             job = Job.objects.get(pk=job_id, posted_by=request.user)
         except Job.DoesNotExist:
@@ -385,3 +391,45 @@ class ApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
         log_action(self.request, 'application.delete', 'Application', instance.pk,
                    {'job_title': instance.job.title})
         instance.delete()
+
+
+class RespondToOfferView(APIView):
+    """Developer accepts or declines a job offer; notifies the company."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            app = Application.objects.select_related('job', 'job__company').get(
+                pk=pk, user=request.user
+            )
+        except Application.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if app.status != 'offer':
+            return Response({'detail': 'You can only respond to an active job offer.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        response_value = request.data.get('response')
+        if response_value not in ('accepted', 'declined'):
+            return Response({'detail': 'response must be "accepted" or "declined".'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        app.offer_response = response_value
+        if response_value == 'declined':
+            app.status = 'rejected'
+        app.save()
+
+        # Notify the company that posted the job
+        if app.job.posted_by:
+            verb = 'accepted' if response_value == 'accepted' else 'declined'
+            notify(
+                app.job.posted_by,
+                'application_approved' if response_value == 'accepted' else 'new_application',
+                f'{request.user.username} {verb} your offer for {app.job.title}',
+                f'{request.user.username} has {verb} the job offer for {app.job.title}.',
+                link='/company/dashboard',
+            )
+
+        log_action(request, 'application.update', 'Application', app.pk,
+                   {'offer_response': response_value, 'job': app.job.title})
+        return Response(ApplicationSerializer(app, context={'request': request}).data)

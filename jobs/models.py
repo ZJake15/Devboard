@@ -94,11 +94,20 @@ class Application(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
+    OFFER_RESPONSE_CHOICES = [
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='saved')
     notes = models.TextField(blank=True)
     order = models.PositiveSmallIntegerField(default=0)
     interview_scheduled_at = models.DateTimeField(null=True, blank=True)
     interview_notes = models.CharField(max_length=500, blank=True)
+    offer_response = models.CharField(
+        max_length=10, choices=OFFER_RESPONSE_CHOICES, blank=True,
+        help_text="Developer's response to a job offer",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

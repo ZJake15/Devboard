@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const access = localStorage.getItem('access')
       if (access) {
         const payload = jwtDecode<JwtPayload>(access)
-        setUser({ id: 0, username: payload.username, email: '', first_name: '', last_name: '', is_staff: false, profile: { tier: 'company', headline: '', years_experience: 0, skills: [], remote_preference: 'remote' } })
+        setUser({ id: 0, username: payload.username, email: '', first_name: '', last_name: '', is_staff: false, profile: { tier: 'company', avatar: null, headline: '', years_experience: 0, skills: [], remote_preference: 'remote' } })
       }
       return
     }

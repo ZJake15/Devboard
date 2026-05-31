@@ -80,10 +80,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'tier', 'headline', 'years_experience', 'skills',
+            'tier', 'avatar', 'headline', 'years_experience', 'skills',
             'skill_ids', 'remote_preference', 'rank', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['tier', 'rank', 'created_at', 'updated_at']
+        read_only_fields = ['tier', 'avatar', 'rank', 'created_at', 'updated_at']
 
     def get_rank(self, obj):
         from .rank import compute_rank
@@ -98,7 +98,7 @@ class PublicProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['headline', 'years_experience', 'skills', 'remote_preference', 'projects', 'rank']
+        fields = ['avatar', 'headline', 'years_experience', 'skills', 'remote_preference', 'projects', 'rank']
 
     def get_rank(self, obj):
         from .rank import compute_rank

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchMyJobs, fetchMyCompany, deleteJob, fetchReceivedApplications, type Job, type Application } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { OfferWorkModal } from '../components/OfferWorkModal'
 
 const REMOTE_LABEL: Record<string, string> = {
   remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site',
@@ -85,9 +86,21 @@ function ApplicationRow({ app }: { app: Application & { applicant_username?: str
         </div>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className={`text-xs px-2.5 py-1 rounded-full border capitalize ${STATUS_STYLE[app.status] ?? 'bg-white/10 text-white/50 border-white/10'}`}>
-          {app.status === 'interview' ? '✓ Approved' : app.status}
-        </span>
+        {app.offer_response === 'accepted' && (
+          <span className="text-xs px-2.5 py-1 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+            ✅ Offer accepted
+          </span>
+        )}
+        {app.offer_response === 'declined' && (
+          <span className="text-xs px-2.5 py-1 rounded-full border bg-red-500/15 text-red-400 border-red-500/30">
+            Offer declined
+          </span>
+        )}
+        {!app.offer_response && (
+          <span className={`text-xs px-2.5 py-1 rounded-full border capitalize ${STATUS_STYLE[app.status] ?? 'bg-white/10 text-white/50 border-white/10'}`}>
+            {app.status === 'interview' ? '✓ Approved' : app.status}
+          </span>
+        )}
         <span className="text-white/30 text-sm">→</span>
       </div>
     </motion.div>
@@ -100,6 +113,7 @@ export function CompanyDashboardPage() {
   const { isCompany } = useAuth()
   const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<Tab>('jobs')
+  const [showOfferModal, setShowOfferModal] = useState(false)
 
   const { data: company } = useQuery({
     queryKey: ['my-company'],
@@ -111,12 +125,18 @@ export function CompanyDashboardPage() {
     queryKey: ['my-jobs'],
     queryFn: fetchMyJobs,
     enabled: isCompany,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const { data: applications, isLoading: appsLoading } = useQuery({
     queryKey: ['received-applications'],
     queryFn: fetchReceivedApplications,
     enabled: isCompany && activeTab === 'applications',
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 15_000,
   })
 
   const deleteMutation = useMutation({
@@ -151,12 +171,20 @@ export function CompanyDashboardPage() {
               {jobs?.length ?? 0} jobs · {applications?.length ?? '?'} applications received
             </p>
           </div>
-          <Link
-            to="/company/jobs/new"
-            className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
-          >
-            + Post a job
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowOfferModal(true)}
+              className="px-5 py-2.5 rounded-xl border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 text-sm font-medium transition-colors"
+            >
+              🤝 Offer work
+            </button>
+            <Link
+              to="/company/jobs/new"
+              className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
+            >
+              + Post a job
+            </Link>
+          </div>
         </div>
       </motion.div>
 
@@ -274,6 +302,12 @@ export function CompanyDashboardPage() {
               </div>
             )}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showOfferModal && (
+          <OfferWorkModal jobs={jobs ?? []} onClose={() => setShowOfferModal(false)} />
         )}
       </AnimatePresence>
     </div>

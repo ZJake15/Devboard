@@ -5,9 +5,11 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   api, fetchSkills, deleteAccount,
   fetchMyProjects, createProject, updateProject, deleteProject,
+  uploadAvatar, removeAvatar,
   type Project,
 } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { ImageUploader } from '../components/ImageUploader'
 
 function DeleteAccountModal({ username, onConfirm, onCancel, loading }: {
   username: string
@@ -202,6 +204,26 @@ export function ProfilePage() {
               {tier === 'premium' ? '★ Premium' : 'Free'}
             </span>
           </div>
+        </div>
+
+        {/* Profile picture */}
+        <div className="glass rounded-xl p-6">
+          <h2 className="text-xs text-white/50 uppercase tracking-wider mb-4">Profile Picture</h2>
+          <ImageUploader
+            currentUrl={user?.profile?.avatar ?? null}
+            shape="circle"
+            fallback={
+              <span className="text-3xl font-bold text-violet-300">
+                {user?.username?.[0]?.toUpperCase()}
+              </span>
+            }
+            onUpload={async (file) => {
+              const res = await uploadAvatar(file)
+              return { url: res.avatar }
+            }}
+            onRemove={async () => { await removeAvatar() }}
+            onChanged={refreshUser}
+          />
         </div>
 
         {/* Rank breakdown card */}

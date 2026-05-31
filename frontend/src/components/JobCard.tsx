@@ -91,8 +91,8 @@ export function JobCard({ job, index }: Props) {
             <div className="flex-1 min-w-0">
               {/* Company */}
               <div className="flex items-center gap-2 mb-2">
-                {job.company.logo_url ? (
-                  <img src={job.company.logo_url} alt={job.company.name} className="w-6 h-6 rounded object-contain" />
+                {(job.company.logo || job.company.logo_url) ? (
+                  <img src={job.company.logo || job.company.logo_url} alt={job.company.name} className="w-6 h-6 rounded object-cover" />
                 ) : (
                   <div className="w-6 h-6 rounded bg-violet-600/30 flex items-center justify-center text-[10px] font-bold text-violet-400">
                     {job.company.name[0]}

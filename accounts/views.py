@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions, status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from audit.utils import log_action
+from config.image_upload import validate_image
 from .models import Notification, Profile, Project, Skill
 from .serializers import (
     ProfileSerializer,
@@ -84,8 +86,15 @@ class DeleteAccountView(APIView):
 
     def delete(self, request):
         user = request.user
-        log_action(request, 'user.delete', 'User', user.pk,
-                   {'username': user.username})
+        company_profile = getattr(user, 'company_profile', None)
+        log_action(request, 'user.delete', 'User', user.pk, {
+            'username': user.username,
+            'account_type': 'company' if company_profile else 'developer',
+        })
+        # Company accounts: also remove the company, which cascades its jobs,
+        # applications, ratings, and the company profile.
+        if company_profile:
+            company_profile.company.delete()
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -141,6 +150,37 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Project.objects.filter(profile=self.request.user.profile)
+
+
+class AvatarUploadView(APIView):
+    """Upload or replace the developer's profile picture."""
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        profile = request.user.profile
+        uploaded = request.FILES.get('avatar')
+        error = validate_image(uploaded)
+        if error:
+            return error
+
+        # Remove the previous file so old uploads don't pile up
+        if profile.avatar:
+            profile.avatar.delete(save=False)
+
+        profile.avatar = uploaded
+        profile.save()
+        log_action(request, 'user.profile_update', 'Profile', request.user.pk,
+                   {'field': 'avatar'})
+
+        url = request.build_absolute_uri(profile.avatar.url)
+        return Response({'avatar': url}, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        profile = request.user.profile
+        if profile.avatar:
+            profile.avatar.delete(save=True)
+        return Response({'avatar': None}, status=status.HTTP_200_OK)
 
 
 # ── Notifications ─────────────────────────────────────────────────────────────

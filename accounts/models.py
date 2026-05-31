@@ -20,6 +20,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     tier = models.CharField(max_length=10, choices=TIER_CHOICES, default=TIER_FREE)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     headline = models.CharField(max_length=200, blank=True)
     years_experience = models.PositiveSmallIntegerField(default=0)
     skills = models.ManyToManyField(Skill, blank=True, related_name='profiles')

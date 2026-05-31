@@ -9,10 +9,10 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = [
-            'id', 'name', 'slug', 'logo_url', 'website', 'description',
+            'id', 'name', 'slug', 'logo', 'logo_url', 'website', 'description',
             'avg_response_days', 'response_rate',
         ]
-        read_only_fields = ['slug']
+        read_only_fields = ['slug', 'logo']
 
 
 class CompanyRegisterSerializer(serializers.Serializer):

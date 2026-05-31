@@ -176,7 +176,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'job', 'job_id', 'status', 'notes', 'order',
             'applicant_username', 'interview_scheduled_at', 'interview_notes',
-            'created_at', 'updated_at',
+            'offer_response', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

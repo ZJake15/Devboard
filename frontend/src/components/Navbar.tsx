@@ -1,6 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { useTheme } from '../lib/theme'
 import { NotificationBell } from './NotificationBell'
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme()
+  return (
+    <button
+      onClick={toggleTheme}
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+    >
+      <span className="text-lg">{theme === 'dark' ? '☀️' : '🌙'}</span>
+    </button>
+  )
+}
 
 export function Navbar() {
   const { user, tier, isAuthenticated, isCompany, logout } = useAuth()
@@ -39,6 +53,7 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {isAuthenticated ? (
             <>
               {isCompany && (
@@ -62,9 +77,13 @@ export function Navbar() {
               <NotificationBell />
               <Link
                 to={isCompany ? '/company/dashboard' : '/profile'}
-                className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white text-sm font-bold hover:bg-violet-500 transition-colors"
+                className="w-8 h-8 rounded-full bg-violet-600 overflow-hidden flex items-center justify-center text-white text-sm font-bold hover:bg-violet-500 transition-colors"
               >
-                {user?.username?.[0]?.toUpperCase()}
+                {user?.profile?.avatar ? (
+                  <img src={user.profile.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  user?.username?.[0]?.toUpperCase()
+                )}
               </Link>
               <button
                 onClick={() => { logout(); navigate('/') }}
