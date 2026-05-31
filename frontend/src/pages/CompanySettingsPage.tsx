@@ -57,7 +57,7 @@ function DeleteCompanyModal({ companyName, onConfirm, onCancel, loading }: {
 }
 
 export function CompanySettingsPage() {
-  const { isCompany, logout } = useAuth()
+  const { isCompany, logout, refreshUser } = useAuth()
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [saved, setSaved] = useState(false)
@@ -137,7 +137,10 @@ export function CompanySettingsPage() {
                     return { url: res.logo }
                   }}
                   onRemove={async () => { await removeCompanyLogo() }}
-                  onChanged={() => qc.invalidateQueries({ queryKey: ['my-company'] })}
+                  onChanged={() => {
+                    qc.invalidateQueries({ queryKey: ['my-company'] })
+                    refreshUser()
+                  }}
                 />
               </div>
 

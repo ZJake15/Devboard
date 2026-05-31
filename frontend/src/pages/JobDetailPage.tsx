@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { fetchJob, createApplication } from '../lib/api'
+import { fetchJob, createApplication, fetchApplications } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 function FrostedSalaryReveal({ job }: { job: import('../lib/api').Job }) {
@@ -71,6 +71,16 @@ export function JobDetailPage() {
     queryFn: () => fetchJob(Number(id)),
   })
 
+  const { data: myApplications } = useQuery({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
+    enabled: isAuthenticated,
+  })
+
+  // Did the current user already apply to (not just save) this job?
+  const existingApp = myApplications?.find(a => a.job.id === Number(id))
+  const alreadyApplied = !!existingApp && existingApp.status !== 'saved'
+
   const applyMutation = useMutation({
     mutationFn: (appStatus: string) =>
       createApplication({ job_id: Number(id), status: appStatus }),
@@ -130,7 +140,19 @@ export function JobDetailPage() {
 
             {/* Apply buttons */}
             <div className="flex flex-col gap-2 min-w-40">
-              {al.masked ? (
+              {alreadyApplied ? (
+                <>
+                  <div className="px-6 py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-medium text-sm text-center">
+                    ✓ Already applied
+                  </div>
+                  <Link
+                    to="/pipeline"
+                    className="text-xs text-violet-400 hover:text-violet-300 transition-colors text-center"
+                  >
+                    Track in your pipeline →
+                  </Link>
+                </>
+              ) : al.masked ? (
                 <Link
                   to="/pricing"
                   className="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium text-sm transition-colors text-center"
@@ -157,14 +179,14 @@ export function JobDetailPage() {
                 )
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && !alreadyApplied && (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => applyMutation.mutate('saved')}
                   disabled={applyMutation.isPending}
                   className="px-6 py-2 rounded-xl glass glass-hover text-white/70 text-sm disabled:opacity-50 transition-all"
                 >
-                  + Save to Pipeline
+                  {existingApp?.status === 'saved' ? '✓ Saved to Pipeline' : '+ Save to Pipeline'}
                 </motion.button>
               )}
             </div>

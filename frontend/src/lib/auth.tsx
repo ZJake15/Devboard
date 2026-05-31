@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { fetchMe, login as apiLogin, upgradeTier, type User } from './api'
+import { fetchMe, fetchMyCompany, login as apiLogin, upgradeTier, type User } from './api'
 
 interface JwtPayload {
   tier: string
@@ -48,11 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const at = readAccountTypeFromToken()
     setAccountType(at)
     if (at === 'company') {
-      // Company accounts don't have a developer profile — store minimal info
+      // Company accounts don't have a developer profile — store minimal info,
+      // using the company logo as the avatar shown in the navbar.
       const access = localStorage.getItem('access')
       if (access) {
         const payload = jwtDecode<JwtPayload>(access)
-        setUser({ id: 0, username: payload.username, email: '', first_name: '', last_name: '', is_staff: false, profile: { tier: 'company', avatar: null, headline: '', years_experience: 0, skills: [], remote_preference: 'remote' } })
+        let logo: string | null = null
+        try {
+          const company = await fetchMyCompany()
+          logo = company.logo ?? company.logo_url ?? null
+        } catch { /* ignore — fall back to initial */ }
+        setUser({ id: 0, username: payload.username, email: '', first_name: '', last_name: '', is_staff: false, profile: { tier: 'company', avatar: logo, headline: '', years_experience: 0, skills: [], remote_preference: 'remote' } })
       }
       return
     }
