@@ -84,9 +84,13 @@ export function JobDetailPage() {
   const applyMutation = useMutation({
     mutationFn: (appStatus: string) =>
       createApplication({ job_id: Number(id), status: appStatus }),
-    onSuccess: () => {
+    onSuccess: (_data, appStatus) => {
       qc.invalidateQueries({ queryKey: ['applications'] })
-      navigate(`/jobs/${id}/applied`)
+      // Only the actual "Apply" flow shows the confirmation page.
+      // Saving just keeps the job in the pipeline.
+      if (appStatus === 'applied') {
+        navigate(`/jobs/${id}/applied`)
+      }
     },
   })
 
