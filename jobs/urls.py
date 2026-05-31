@@ -1,0 +1,36 @@
+from django.urls import path
+from .views import (
+    ApplicationDetailView,
+    ApplicationListCreateView,
+    CompanyJobDetailView,
+    CompanyJobListView,
+    JobCreateView,
+    JobDetailView,
+    JobListView,
+    OfferJobView,
+    RateApplicantView,
+    ReceivedApplicationsView,
+    ReviewApplicationView,
+    SalaryBenchmarkView,
+    SalarySubmissionView,
+    SavedSearchDetailView,
+    SavedSearchListCreateView,
+)
+
+urlpatterns = [
+    path('', JobListView.as_view(), name='job-list'),
+    path('create/', JobCreateView.as_view(), name='job-create'),
+    path('my-jobs/', CompanyJobListView.as_view(), name='company-job-list'),
+    path('received-applications/', ReceivedApplicationsView.as_view(), name='received-applications'),
+    path('received-applications/<int:pk>/review/', ReviewApplicationView.as_view(), name='review-application'),
+    path('received-applications/<int:pk>/rate/', RateApplicantView.as_view(), name='rate-applicant'),
+    path('offer/', OfferJobView.as_view(), name='offer-job'),
+    path('my-jobs/<int:pk>/', CompanyJobDetailView.as_view(), name='company-job-detail'),
+    path('<int:pk>/', JobDetailView.as_view(), name='job-detail'),
+    path('salary/submit/', SalarySubmissionView.as_view(), name='salary-submit'),
+    path('salary/benchmark/', SalaryBenchmarkView.as_view(), name='salary-benchmark'),
+    path('saved-searches/', SavedSearchListCreateView.as_view(), name='saved-search-list'),
+    path('saved-searches/<int:pk>/', SavedSearchDetailView.as_view(), name='saved-search-detail'),
+    path('applications/', ApplicationListCreateView.as_view(), name='application-list'),
+    path('applications/<int:pk>/', ApplicationDetailView.as_view(), name='application-detail'),
+]
