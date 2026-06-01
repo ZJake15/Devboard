@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://devboard-backend-j0tt.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -24,7 +24,7 @@ api.interceptors.response.use(
       const refresh = localStorage.getItem('refresh')
       if (refresh) {
         try {
-          const { data } = await axios.post('/api/auth/token/refresh/', { refresh })
+          const { data } = await axios.post('https://devboard-backend-j0tt.onrender.com/api/auth/token/refresh/',{ refresh })
           localStorage.setItem('access', data.access)
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)
