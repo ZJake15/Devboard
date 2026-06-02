@@ -1,146 +1,221 @@
 # DevBoard — Freemium Tech Job Board
 
-A full-stack tech job board with **field-level salary masking** gated by JWT tier claims.
+A full-stack job board platform built with **Django REST Framework** and **React**, featuring JWT authentication, role-based access control, salary transparency controls, company management, applicant tracking, and salary benchmarking.
 
-## Stack
-
-| Layer | Tech |
-|---|---|
-| Backend | Django 6, DRF, SimpleJWT, django-filter, SQLite |
-| Frontend | React 18 + TypeScript, Vite, Tailwind CSS, Framer Motion, TanStack Query |
-| Auth | JWT with custom `tier` claim (`free` / `premium`) |
-| Tests | pytest + pytest-django (31 tests) |
-
----
-
-## Quick Start
-
-### Backend
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Apply migrations
-python manage.py migrate
-
-# 3. Seed demo data (jobs, companies, skills, users)
-python manage.py seed
-
-# 4. Start dev server
-python manage.py runserver
-```
-
-**Demo accounts created by seed:**
-
-| Username | Password | Tier |
-|---|---|---|
-| `free_user` | `password123` | Free |
-| `premium_user` | `password123` | Premium |
-| `admin` | `admin123` | Superuser |
-
-Admin panel: http://127.0.0.1:8000/admin/
+## Live Deployment
 
 ### Frontend
 
+https://devboard-bay.vercel.app
+
+### Backend API
+
+https://devboard-backend-j0tt.onrender.com
+
+### Admin Panel
+
+https://devboard-backend-j0tt.onrender.com/admin/
+
+---
+
+# Technology Stack
+
+| Layer          | Technology                                              |
+| -------------- | ------------------------------------------------------- |
+| Frontend       | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion |
+| Backend        | Django, Django REST Framework                           |
+| Authentication | JWT (SimpleJWT)                                         |
+| Database       | PostgreSQL (Render)                                     |
+| Deployment     | Vercel (Frontend), Render (Backend)                     |
+| Testing        | Pytest, pytest-django                                   |
+| API Client     | Axios                                                   |
+
+---
+
+# Features
+
+## User Features
+
+* User Registration
+* JWT Authentication
+* Profile Management
+* Skill Management
+* Job Search
+* Job Applications
+* Saved Searches
+* Salary Benchmarking
+* Notifications
+
+## Company Features
+
+* Company Registration
+* Company Verification
+* Company Dashboard
+* Job Posting
+* Application Review
+* Candidate Rating
+
+## Premium Features
+
+* Direct Application Links
+* Salary Visibility
+* Salary Analytics
+* Premium Account Upgrade
+
+---
+
+# Security Features
+
+* JWT Authentication
+* JWT Refresh Tokens
+* Field-Level Salary Masking
+* Honeypot Bot Protection
+* Registration Time-Trap Protection
+* Rate Limiting / Throttling
+* Security Headers
+* Role-Based Access Control
+* CORS Protection
+* PostgreSQL Database Security
+
+---
+
+# Installation
+
+## Backend Setup
+
+```bash
+pip install -r requirements.txt
+
+python manage.py migrate
+
+python manage.py seed
+
+python manage.py runserver
+```
+
+Backend URL:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+## Frontend Setup
+
 ```bash
 cd frontend
+
 npm install
+
 npm run dev
 ```
 
-App: http://localhost:5173
+Frontend URL:
 
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `DJANGO_SECRET_KEY` | insecure dev key | Set a strong secret in production |
-| `DJANGO_DEBUG` | `True` | Set `False` for production |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated allowed hosts |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Frontend origin(s) |
-
----
-
-## API Endpoints
-
-| Method | URL | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/register/` | None | Register (honeypot + time-trap) |
-| POST | `/api/auth/token/` | None | Login → JWT with `tier` claim |
-| POST | `/api/auth/token/refresh/` | None | Refresh access token |
-| GET | `/api/auth/me/` | Bearer | Current user + profile |
-| PATCH | `/api/auth/me/` | Bearer | Update profile / skills |
-| POST | `/api/auth/upgrade/` | Bearer | Demo: upgrade to premium |
-| GET | `/api/auth/skills/` | None | All skills |
-| GET | `/api/jobs/` | None | Job list (filtered + paginated) |
-| GET | `/api/jobs/:id/` | None | Job detail |
-| GET | `/api/jobs/salary/benchmark/` | None | Crowd salary aggregates |
-| POST | `/api/jobs/salary/submit/` | None | Submit anonymous salary |
-| GET/POST | `/api/jobs/saved-searches/` | Bearer | Saved searches |
-| GET/PATCH/DELETE | `/api/jobs/applications/:id/` | Bearer | Update/delete application |
-| GET | `/api/companies/` | None | Companies |
-
-### Job list query params
-
-`search`, `location`, `remote_policy` (multi), `seniority` (multi), `tech_stack` (multi slug), `salary_min`, `salary_verified`, `page`
-
----
-
-## Core Feature: Field-Level Masking
-
-The JWT carries a `tier` claim. The `JobSerializer` reads `request.auth.get("tier")` — **no extra DB hit** — and returns:
-
-**Free / anonymous:**
-```json
-{
-  "salary_range": { "masked": true, "hint": "Top 25% for React roles in Berlin", "message": "Upgrade to reveal..." },
-  "application_link": { "masked": true, "message": "Premium members apply directly" }
-}
+```text
+http://localhost:5173
 ```
 
-**Premium:**
-```json
-{
-  "salary_range": { "masked": false, "min": 120000, "max": 160000, "currency": "USD" },
-  "application_link": { "masked": false, "url": "https://acme.com/apply" }
-}
+---
+
+# Environment Variables
+
+## Backend
+
+```env
+DJANGO_SECRET_KEY=your-secret-key
+
+DJANGO_DEBUG=False
+
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,.onrender.com
+
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://devboard-bay.vercel.app
 ```
 
-Real values are **never sent** to free/anonymous clients — not even hidden in the payload.
+---
+
+# API Endpoints
+
+## Authentication
+
+```http
+POST /api/auth/register/
+POST /api/auth/token/
+POST /api/auth/token/refresh/
+GET  /api/auth/me/
+PATCH /api/auth/me/
+POST /api/auth/upgrade/
+```
+
+## Jobs
+
+```http
+GET  /api/jobs/
+GET  /api/jobs/{id}/
+POST /api/jobs/create/
+```
+
+## Applications
+
+```http
+GET    /api/jobs/applications/
+POST   /api/jobs/applications/
+PATCH  /api/jobs/applications/{id}/
+DELETE /api/jobs/applications/{id}/
+```
+
+## Companies
+
+```http
+POST /api/companies/register/
+POST /api/companies/verify-otp/
+GET  /api/companies/me/
+PATCH /api/companies/me/
+```
 
 ---
 
-## Security Features
-
-- **Honeypot fields** (`website`, `nickname`) on registration — server rejects non-empty submissions
-- **Time-trap** — rejects registration submitted in under 2 seconds
-- **DRF throttling** — 10/min on auth, 5/min on salary submissions, 60/min anon, 120/min user
-- **Security headers** — `X-Content-Type-Options`, `X-Frame-Options: DENY`, HSTS (production)
-- **JWT rotation** — refresh tokens rotate on use
-
----
-
-## Running Tests
+# Testing
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-Test coverage:
-- `test_masking.py` — salary + link masking for anon/free/premium, regression (no real values in body)
-- `test_auth.py` — honeypot, time-trap, JWT tier claim
-- `test_filters.py` — search, remote_policy, seniority, tech_stack, pagination link preservation
-- `test_salary_benchmark.py` — aggregates, anonymization, 404 on no data
+---
+
+# Security Audit Summary
+
+### Authentication
+
+* JWT Authentication Implemented
+* Refresh Tokens Enabled
+* Tier-based Access Control
+
+### Input Validation
+
+* Honeypot Fields
+* Registration Time-Trap
+* Server-side Validation
+
+### Application Security
+
+* CORS Restrictions
+* Security Headers
+* XSS Protection
+* Clickjacking Protection
+* HTTPS Deployment
+
+### Database Security
+
+* PostgreSQL Hosted on Render
+* Environment Variable Configuration
+* Secrets Removed from Source Code
 
 ---
 
-## Security Audit
+# Authors
 
-```bash
-bash scripts/audit.sh
-```
+DevBoard Development Team
 
-Runs bandit (SAST), pip-audit (CVE check), and the full test suite.
+Academic Project Submission
